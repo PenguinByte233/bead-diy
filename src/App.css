@@ -1,0 +1,216 @@
+:root {
+  --bg: #f7f3ee;
+  --surface: #ffffff;
+  --ink: #4a4238;
+  --ink-muted: #9a8f80;
+  --accent: #b9806a;
+  --accent-soft: #ead9cf;
+  --line: #ede4d8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--bg);
+}
+
+/* 顶部标题 */
+.app-header {
+  padding: 14px 20px 4px;
+  flex: 0 0 auto;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.app-subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+/* 手串预览区（上半部分） */
+.bracelet-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+}
+
+.bracelet-svg {
+  width: min(74vw, 340px);
+  max-height: 46vh;
+  touch-action: manipulation;
+}
+
+.bracelet-bead {
+  cursor: grab;
+  touch-action: none;
+}
+
+.bracelet-bead:active {
+  cursor: grabbing;
+}
+
+.bracelet-bead.is-dragging {
+  cursor: grabbing;
+}
+
+.bracelet-count {
+  font-size: 24px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+
+.bracelet-hint {
+  font-size: 13px;
+  fill: var(--ink-muted);
+}
+
+.bracelet-tip {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+}
+
+.tool-btn {
+  padding: 8px 22px;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.tool-btn:active:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.tool-btn:disabled {
+  color: #c9c0b2;
+  cursor: not-allowed;
+}
+
+/* 素材区（下半部分） */
+.palette-area {
+  flex: 0 0 auto;
+  max-height: 46vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-radius: 20px 20px 0 0;
+  overflow: hidden;
+}
+
+.palette {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.palette-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+  padding: 12px 14px 8px;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+
+.palette-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.palette-tab {
+  padding: 6px 16px;
+  font-size: 14px;
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.palette-tab.is-active {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.palette-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 10px;
+  padding: 8px 14px 16px;
+}
+
+.palette-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px 8px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform 0.08s ease;
+  touch-action: manipulation;
+}
+
+.palette-item:active {
+  transform: scale(0.94);
+  background: var(--accent-soft);
+}
+
+.palette-item-svg {
+  width: 40px;
+  height: 40px;
+}
+
+.palette-item-name {
+  font-size: 12px;
+  color: var(--ink);
+}
