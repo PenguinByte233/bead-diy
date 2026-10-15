@@ -1,19 +1,55 @@
 import { darken, lighten } from '../utils/color'
 
 interface BeadGlyphProps {
-  color: string
+  color?: string
+  image?: string
   r: number
-  /** 渐变 id，需在页面内唯一，避免不同珠子互相覆盖 */
+  /** 渐变/裁剪 id，需在页面内唯一，避免不同珠子互相覆盖 */
   gradientId: string
   gloss?: 'high' | 'matte' | 'metallic'
 }
 
 /**
- * 单颗珠子的立体渲染：径向渐变 + 左上高光 + 深色描边。
- * 以 (0,0) 为圆心，配合外层 <g transform> 平移定位。
+ * 单颗珠子的渲染。有实拍图时用图片（圆形裁剪 + 细描边），
+ * 否则回退到 SVG 径向渐变 + 高光。以 (0,0) 为圆心，配合外层 <g transform> 平移定位。
  */
-export default function BeadGlyph({ color, r, gradientId, gloss = 'high' }: BeadGlyphProps) {
-  // 不同光泽度的明暗与高光参数
+export default function BeadGlyph({ color, image, r, gradientId, gloss = 'high' }: BeadGlyphProps) {
+  // 实拍图：透明底 PNG 铺满并裁剪成圆形，保证每颗珠子外观统一
+  if (image) {
+    const clipId = `${gradientId}-clip`
+    const shadowId = `${gradientId}-shadow`
+    return (
+      <g filter={`url(#${shadowId})`}>
+        <defs>
+          <clipPath id={clipId}>
+            <circle r={r} />
+          </clipPath>
+          <filter id={shadowId} x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow
+              dx="0"
+              dy={r * 0.1}
+              stdDeviation={r * 0.08}
+              floodColor="#000000"
+              floodOpacity="0.28"
+            />
+          </filter>
+        </defs>
+        <g clipPath={`url(#${clipId})`}>
+          <image
+            href={image}
+            x={-r}
+            y={-r}
+            width={r * 2}
+            height={r * 2}
+            preserveAspectRatio="xMidYMid slice"
+          />
+        </g>
+      </g>
+    )
+  }
+
+  // 兜底：SVG 渐变模拟立体感
+  const c = color ?? '#cccccc'
   const highlight =
     gloss === 'matte'
       ? { light: 0.3, dark: 0.35, spot: 0.35 }
@@ -25,13 +61,13 @@ export default function BeadGlyph({ color, r, gradientId, gloss = 'high' }: Bead
     <g>
       <defs>
         <radialGradient id={gradientId} cx="0.35" cy="0.3" r="0.75">
-          <stop offset="0%" stopColor={lighten(color, highlight.light)} />
-          <stop offset="35%" stopColor={color} />
-          <stop offset="100%" stopColor={darken(color, highlight.dark)} />
+          <stop offset="0%" stopColor={lighten(c, highlight.light)} />
+          <stop offset="35%" stopColor={c} />
+          <stop offset="100%" stopColor={darken(c, highlight.dark)} />
         </radialGradient>
       </defs>
       {/* 珠体 */}
-      <circle r={r} fill={`url(#${gradientId})`} stroke={darken(color, 0.55)} strokeWidth={r * 0.06} />
+      <circle r={r} fill={`url(#${gradientId})`} stroke={darken(c, 0.55)} strokeWidth={r * 0.06} />
       {/* 左上高光点 */}
       <circle cx={-r * 0.35} cy={-r * 0.35} r={r * 0.22} fill="#ffffff" opacity={highlight.spot} />
     </g>

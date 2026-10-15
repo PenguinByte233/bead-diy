@@ -15,7 +15,7 @@ interface BraceletProps {
 
 const SIZE = 320
 const CENTER = SIZE / 2
-const BRACELET_RADIUS = SIZE * 0.38
+const BRACELET_RADIUS = SIZE * 0.40
 // 移动超过该距离（px）才判定为拖动，否则视为点击删除
 const DRAG_THRESHOLD = 6
 
@@ -97,7 +97,7 @@ export default function Bracelet({ beads, onRemove, onMove, onDragStart }: Brace
         cy={CENTER}
         r={BRACELET_RADIUS}
         fill="none"
-        stroke="#e6dccd"
+        stroke="#000000"
         strokeWidth={Math.max(r * 0.35, 2)}
       />
 
@@ -116,6 +116,7 @@ export default function Bracelet({ beads, onRemove, onMove, onDragStart }: Brace
           >
             <BeadGlyph
               color={bead.color}
+              image={bead.image}
               r={r}
               gradientId={`bracelet-${bead.instanceId}`}
               gloss={bead.gloss}

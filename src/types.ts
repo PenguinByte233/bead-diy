@@ -4,13 +4,15 @@ export interface BeadType {
   name: string
   /** 分类 id，对应 BeadCategory.id，用于筛选 */
   category: string
-  /** 材质中文名，用于展示 */
-  material: string
-  /** 主色（hex），用于 SVG 渲染 */
-  color: string
+  /** 材质中文名，用于展示（当前未分类，暂未使用） */
+  material?: string
+  /** 主色（hex），用于无实拍图时的 SVG 兜底渲染 */
+  color?: string
+  /** 实拍图（透明底 PNG），优先于 color 渲染 */
+  image?: string
   /** 参考单价（第一版暂不展示，预留字段） */
   price?: number
-  /** 光泽类型：high 高光 / matte 哑光 / metallic 金属，用于渲染差异 */
+  /** 光泽类型：high 高光 / matte 哑光 / metallic 金属，仅用于 SVG 兜底渲染 */
   gloss?: 'high' | 'matte' | 'metallic'
 }
 
@@ -23,4 +25,13 @@ export interface BeadInstance extends BeadType {
 export interface BeadCategory {
   id: string
   label: string
+}
+
+// 保存的手串设计（「我的设计」里的一项）
+export interface Design {
+  id: string
+  name: string
+  /** 按顺序排列的珠子素材 id（对应 BeadType.id） */
+  beadIds: string[]
+  createdAt: number
 }

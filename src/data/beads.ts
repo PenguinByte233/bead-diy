@@ -1,32 +1,36 @@
 import type { BeadCategory, BeadType } from '../types'
 
-// 第一版使用本地示例素材，后续可由店主拍摄的真实照片或后台数据替换。
+// 实拍珠子素材（透明底 PNG）。实体珠子归入「水晶宝石」，配件与我的设计暂为空。
+import liangTouMing from '../beads/亮透明珠子_transparent.png'
+import anTouMing from '../beads/暗透明色珠子_transparent.png'
+import qianLan from '../beads/浅蓝色珠子_transparent.png'
+import shenFen from '../beads/深粉色珠子_transparent.png'
+import shenZiHong from '../beads/深紫红色珠子_transparent.png'
+import shenLv from '../beads/深绿色珠子_transparent.png'
+import shenLan from '../beads/深蓝色珠子_transparent.png'
+import fenZi from '../beads/粉紫色珠子_transparent.png'
+import fenHong from '../beads/粉红色珠子_transparent.png'
+import touMingBai from '../beads/透明白色珠子_transparent.png'
+import huangHe from '../beads/黄褐色珠子_transparent.png'
+import heiSe from '../beads/黑色珠子_transparent.png'
+
 export const categories: BeadCategory[] = [
-  { id: 'all', label: '全部' },
-  { id: 'crystal', label: '水晶' },
-  { id: 'jade', label: '玉石' },
-  { id: 'wood', label: '木质' },
-  { id: 'metal', label: '金属' },
+  { id: 'crystal', label: '水晶宝石' },
+  { id: 'accessory', label: '配件' },
+  { id: 'design', label: '我的设计' },
 ]
 
 export const beads: BeadType[] = [
-  // 水晶
-  { id: 'crystal-clear', name: '白水晶', category: 'crystal', material: '水晶', color: '#e6eef5', gloss: 'high', price: 3 },
-  { id: 'crystal-amethyst', name: '紫水晶', category: 'crystal', material: '水晶', color: '#9b6fc9', gloss: 'high', price: 5 },
-  { id: 'crystal-rose', name: '粉水晶', category: 'crystal', material: '水晶', color: '#f3a6c8', gloss: 'high', price: 4 },
-  { id: 'crystal-aqua', name: '海蓝宝', category: 'crystal', material: '水晶', color: '#7fb8d8', gloss: 'high', price: 6 },
-  { id: 'crystal-green', name: '绿幽灵', category: 'crystal', material: '水晶', color: '#7bb58a', gloss: 'high', price: 6 },
-  // 玉石
-  { id: 'jade-white', name: '白玉', category: 'jade', material: '玉石', color: '#f2efe4', gloss: 'matte', price: 8 },
-  { id: 'jade-green', name: '翡翠', category: 'jade', material: '玉石', color: '#5da376', gloss: 'matte', price: 12 },
-  { id: 'jade-red', name: '红玛瑙', category: 'jade', material: '玉石', color: '#c94f3d', gloss: 'matte', price: 7 },
-  { id: 'jade-black', name: '黑曜石', category: 'jade', material: '玉石', color: '#3a3f4a', gloss: 'matte', price: 6 },
-  // 木质
-  { id: 'wood-sandal', name: '檀木', category: 'wood', material: '木质', color: '#8a5a3b', gloss: 'matte', price: 5 },
-  { id: 'wood-rosewood', name: '花梨木', category: 'wood', material: '木质', color: '#a06a45', gloss: 'matte', price: 4 },
-  { id: 'wood-ebony', name: '乌木', category: 'wood', material: '木质', color: '#4a3f38', gloss: 'matte', price: 6 },
-  // 金属
-  { id: 'metal-gold', name: '黄金', category: 'metal', material: '金属', color: '#e6b84a', gloss: 'metallic', price: 20 },
-  { id: 'metal-silver', name: '纯银', category: 'metal', material: '金属', color: '#c8ccd4', gloss: 'metallic', price: 10 },
-  { id: 'metal-copper', name: '黄铜', category: 'metal', material: '金属', color: '#c08850', gloss: 'metallic', price: 5 },
+  { id: 'bead-01', name: '亮透明', category: 'crystal', image: liangTouMing },
+  { id: 'bead-02', name: '暗透明色', category: 'crystal', image: anTouMing },
+  { id: 'bead-03', name: '浅蓝色', category: 'crystal', image: qianLan },
+  { id: 'bead-04', name: '深粉色', category: 'crystal', image: shenFen },
+  { id: 'bead-05', name: '深紫红色', category: 'crystal', image: shenZiHong },
+  { id: 'bead-06', name: '深绿色', category: 'crystal', image: shenLv },
+  { id: 'bead-07', name: '深蓝色', category: 'crystal', image: shenLan },
+  { id: 'bead-08', name: '粉紫色', category: 'crystal', image: fenZi },
+  { id: 'bead-09', name: '粉红色', category: 'crystal', image: fenHong },
+  { id: 'bead-10', name: '透明白色', category: 'crystal', image: touMingBai },
+  { id: 'bead-11', name: '黄褐色', category: 'crystal', image: huangHe },
+  { id: 'bead-12', name: '黑色', category: 'crystal', image: heiSe },
 ]

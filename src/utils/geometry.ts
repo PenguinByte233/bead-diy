@@ -22,9 +22,9 @@ export function beadPositions(count: number, cx: number, cy: number, radius: num
  * 根据手串半径和珠子数量计算单颗珠子半径，使相邻珠子不重叠。
  * 数量越多珠子越小，并限制上下限避免过大或过小。
  */
-export function beadRadius(count: number, braceletRadius: number, gapFactor = 0.86): number {
+export function beadRadius(count: number, braceletRadius: number, gapFactor = 0.95): number {
   if (count === 0) return braceletRadius * 0.2
   const arcLength = (2 * Math.PI * braceletRadius) / count
   const radius = (arcLength / 2) * gapFactor
-  return Math.max(4, Math.min(radius, braceletRadius * 0.22))
+  return Math.max(4, Math.min(radius, braceletRadius * 0.24))
 }

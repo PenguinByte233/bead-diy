@@ -1,20 +1,42 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Bracelet from './components/Bracelet'
 import BeadPalette from './components/BeadPalette'
 import { beads as beadCatalog, categories } from './data/beads'
-import type { BeadInstance, BeadType } from './types'
+import { downloadBraceletImage } from './utils/exportImage'
+import type { BeadInstance, BeadType, Design } from './types'
 
 let nextId = 1
 function makeInstance(bead: BeadType): BeadInstance {
   return { ...bead, instanceId: `inst-${nextId++}` }
 }
 
+const DESIGNS_KEY = 'bead-diy-designs'
+
+function loadDesigns(): Design[] {
+  try {
+    const raw = localStorage.getItem(DESIGNS_KEY)
+    return raw ? (JSON.parse(raw) as Design[]) : []
+  } catch {
+    return []
+  }
+}
+
 export default function App() {
   const [bracelet, setBracelet] = useState<BeadInstance[]>([])
-  // 历史快照，用于「撤销」上一步操作
   const [history, setHistory] = useState<BeadInstance[][]>([])
+  const [designs, setDesigns] = useState<Design[]>(loadDesigns)
+  const [savedFlash, setSavedFlash] = useState(false)
+  const braceletAreaRef = useRef<HTMLElement>(null)
 
-  // 增删操作前记录当前状态，便于撤销
+  // 设计持久化到本地，刷新后仍在
+  useEffect(() => {
+    try {
+      localStorage.setItem(DESIGNS_KEY, JSON.stringify(designs))
+    } catch {
+      // 忽略存储失败（如隐私模式）
+    }
+  }, [designs])
+
   const commit = (next: BeadInstance[]) => {
     setHistory((h) => [...h, bracelet])
     setBracelet(next)
@@ -30,7 +52,6 @@ export default function App() {
     commit([])
   }
 
-  // 拖动排序：按 instanceId 定位当前下标，移动到目标槽位（不额外记历史）
   const moveBead = (instanceId: string, to: number) => {
     setBracelet((prev) => {
       const from = prev.findIndex((b) => b.instanceId === instanceId)
@@ -42,7 +63,6 @@ export default function App() {
     })
   }
 
-  // 拖动开始时记录一次快照，供「撤销」恢复拖动前的顺序
   const dragStart = () => {
     setHistory((h) => [...h, bracelet])
   }
@@ -54,21 +74,46 @@ export default function App() {
     setHistory(history.slice(0, -1))
   }
 
+  const saveDesign = () => {
+    if (bracelet.length === 0) return
+    const design: Design = {
+      id: `d-${Date.now()}`,
+      name: `设计 ${designs.length + 1}`,
+      beadIds: bracelet.map((b) => b.id),
+      createdAt: Date.now(),
+    }
+    setDesigns((prev) => [design, ...prev])
+    setSavedFlash(true)
+    window.setTimeout(() => setSavedFlash(false), 1500)
+  }
+
+  const loadDesign = (design: Design) => {
+    const next = design.beadIds
+      .map((id) => beadCatalog.find((b) => b.id === id))
+      .filter((b): b is BeadType => Boolean(b))
+      .map(makeInstance)
+    setBracelet(next)
+  }
+
+  const screenshot = async () => {
+    if (bracelet.length === 0) return
+    const svg = braceletAreaRef.current?.querySelector<SVGSVGElement>('svg')
+    if (!svg) return
+    try {
+      await downloadBraceletImage(svg)
+    } catch (err) {
+      console.error(err)
+      alert('截图生成失败')
+    }
+  }
+
   return (
     <div className="app">
       <header className="app-header">
-        <h1>珠串 DIY</h1>
-        <p className="app-subtitle">点击下方珠子，搭配你的专属手串</p>
-      </header>
-
-      <section className="bracelet-area">
-        <Bracelet
-          beads={bracelet}
-          onRemove={removeBead}
-          onMove={moveBead}
-          onDragStart={dragStart}
-        />
-        <p className="bracelet-tip">提示：点按珠子可移除，按住拖动可调整顺序</p>
+        <div className="app-header-title">
+          <h1>珠串 DIY</h1>
+          <p className="app-subtitle">点击下方珠子，搭配你的专属手串</p>
+        </div>
         <div className="toolbar">
           <button className="tool-btn" onClick={undo} disabled={history.length === 0}>
             撤销
@@ -76,11 +121,32 @@ export default function App() {
           <button className="tool-btn" onClick={clearAll} disabled={bracelet.length === 0}>
             清空
           </button>
+          <button className="tool-btn" onClick={saveDesign} disabled={bracelet.length === 0}>
+            {savedFlash ? '已保存' : '保存'}
+          </button>
+          <button className="tool-btn" onClick={screenshot} disabled={bracelet.length === 0}>
+            截图
+          </button>
         </div>
+      </header>
+
+      <section className="bracelet-area" ref={braceletAreaRef}>
+        <Bracelet
+          beads={bracelet}
+          onRemove={removeBead}
+          onMove={moveBead}
+          onDragStart={dragStart}
+        />
       </section>
 
       <section className="palette-area">
-        <BeadPalette beads={beadCatalog} categories={categories} onAdd={addBead} />
+        <BeadPalette
+          beads={beadCatalog}
+          categories={categories}
+          designs={designs}
+          onAdd={addBead}
+          onLoadDesign={loadDesign}
+        />
       </section>
     </div>
   )
