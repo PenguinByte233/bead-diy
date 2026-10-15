@@ -18,7 +18,9 @@ interface BraceletProps {
 
 const SIZE = 320
 const CENTER = SIZE / 2
-const BRACELET_RADIUS = SIZE * 0.40
+// 手串半径：需保证满编 10 颗时珠子最外缘（半径 + 珠半径 ≈ 半径 × 1.309）不超出 viewBox，
+// 并给投影留出余量。珠半径、绳粗细都由此半径推导，改这里即可整体缩放。
+const BRACELET_RADIUS = SIZE * 0.35
 // 移动超过该距离（px）才判定为拖动，否则视为点击删除
 const DRAG_THRESHOLD = 6
 
@@ -117,6 +119,7 @@ export default function Bracelet({ beads, rope, onRemove, onMove, onDragStart }:
             <BeadGlyph
               color={bead.color}
               image={bead.image}
+              imageFit={bead.imageFit}
               r={r}
               gradientId={`bracelet-${bead.instanceId}`}
               gloss={bead.gloss}

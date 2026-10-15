@@ -1,3 +1,13 @@
+// 实拍图（珠子/绳环）的拟合参数：图片尺寸 + 主体中心 + 主体半径（图像像素）。
+// 用于把图里真正的主体缩放到目标尺寸，去掉透明留白，避免出现「视觉空隙」。
+export interface ImageFit {
+  w: number
+  h: number
+  cx: number
+  cy: number
+  r: number
+}
+
 // 珠子素材定义（目录项，可被重复添加到手串中）
 export interface BeadType {
   id: string
@@ -10,6 +20,8 @@ export interface BeadType {
   color?: string
   /** 实拍图（透明底 PNG），优先于 color 渲染 */
   image?: string
+  /** 实拍图的拟合参数（主体中心与半径），用于去除透明留白、让珠子填满槽位 */
+  imageFit?: ImageFit
   /** 参考单价（第一版暂不展示，预留字段） */
   price?: number
   /** 光泽类型：high 高光 / matte 哑光 / metallic 金属，仅用于 SVG 兜底渲染 */
@@ -43,7 +55,7 @@ export interface RopeType {
   /** 实拍绳环图（透明底 PNG），优先于 SVG 编织纹理渲染 */
   image?: string
   /** 图片绳环的拟合参数：图片尺寸 + 环心 + 中心线半径（图像像素），用于缩放到手串绳环 */
-  imageFit?: { w: number; h: number; cx: number; cy: number; r: number }
+  imageFit?: ImageFit
 }
 
 // 保存的手串设计（「我的设计」里的一项）

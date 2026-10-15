@@ -56,6 +56,7 @@ function DesignThumb({
           <BeadGlyph
             color={items[i].color}
             image={items[i].image}
+            imageFit={items[i].imageFit}
             r={r}
             gradientId={`design-${designId}-${i}`}
             gloss={items[i].gloss}
@@ -159,6 +160,7 @@ export default function BeadPalette({
                   <BeadGlyph
                     color={bead.color}
                     image={bead.image}
+                    imageFit={bead.imageFit}
                     r={PREVIEW_R}
                     gradientId={`palette-${bead.id}`}
                     gloss={bead.gloss}

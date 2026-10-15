@@ -1,8 +1,11 @@
 import { darken, lighten } from '../utils/color'
+import type { ImageFit } from '../types'
 
 interface BeadGlyphProps {
   color?: string
   image?: string
+  /** 实拍图拟合参数：把主体（珠子）缩放到半径 r，去掉透明留白 */
+  imageFit?: ImageFit
   r: number
   /** 渐变/裁剪 id，需在页面内唯一，避免不同珠子互相覆盖 */
   gradientId: string
@@ -13,11 +16,16 @@ interface BeadGlyphProps {
  * 单颗珠子的渲染。有实拍图时用图片（圆形裁剪 + 细描边），
  * 否则回退到 SVG 径向渐变 + 高光。以 (0,0) 为圆心，配合外层 <g transform> 平移定位。
  */
-export default function BeadGlyph({ color, image, r, gradientId, gloss = 'high' }: BeadGlyphProps) {
-  // 实拍图：透明底 PNG 铺满并裁剪成圆形，保证每颗珠子外观统一
+export default function BeadGlyph({ color, image, imageFit, r, gradientId, gloss = 'high' }: BeadGlyphProps) {
+  // 实拍图：透明底 PNG 裁剪成圆形。有拟合参数时按主体中心与半径缩放，
+  // 让珠子填满槽位（无透明留白）；否则回退到「铺满裁圆」。
   if (image) {
     const clipId = `${gradientId}-clip`
     const shadowId = `${gradientId}-shadow`
+    const s = imageFit ? r / imageFit.r : null
+    const rect = s
+      ? { x: -imageFit!.cx * s, y: -imageFit!.cy * s, w: imageFit!.w * s, h: imageFit!.h * s }
+      : null
     return (
       <g filter={`url(#${shadowId})`}>
         <defs>
@@ -35,14 +43,18 @@ export default function BeadGlyph({ color, image, r, gradientId, gloss = 'high' 
           </filter>
         </defs>
         <g clipPath={`url(#${clipId})`}>
-          <image
-            href={image}
-            x={-r}
-            y={-r}
-            width={r * 2}
-            height={r * 2}
-            preserveAspectRatio="xMidYMid slice"
-          />
+          {rect ? (
+            <image href={image} x={rect.x} y={rect.y} width={rect.w} height={rect.h} />
+          ) : (
+            <image
+              href={image}
+              x={-r}
+              y={-r}
+              width={r * 2}
+              height={r * 2}
+              preserveAspectRatio="xMidYMid slice"
+            />
+          )}
         </g>
       </g>
     )

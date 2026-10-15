@@ -27,18 +27,18 @@ export const categories: BeadCategory[] = [
 ]
 
 export const beads: BeadType[] = [
-  { id: 'bead-01', name: '亮透明', category: 'crystal', image: liangTouMing },
-  { id: 'bead-02', name: '暗透明色', category: 'crystal', image: anTouMing },
-  { id: 'bead-03', name: '浅蓝色', category: 'crystal', image: qianLan },
-  { id: 'bead-04', name: '深粉色', category: 'crystal', image: shenFen },
-  { id: 'bead-05', name: '深紫红色', category: 'crystal', image: shenZiHong },
-  { id: 'bead-06', name: '深绿色', category: 'crystal', image: shenLv },
-  { id: 'bead-07', name: '深蓝色', category: 'crystal', image: shenLan },
-  { id: 'bead-08', name: '粉紫色', category: 'crystal', image: fenZi },
-  { id: 'bead-09', name: '粉红色', category: 'crystal', image: fenHong },
-  { id: 'bead-10', name: '透明白色', category: 'crystal', image: touMingBai },
-  { id: 'bead-11', name: '黄褐色', category: 'crystal', image: huangHe },
-  { id: 'bead-12', name: '黑色', category: 'crystal', image: heiSe },
+  { id: 'bead-01', name: '亮透明', category: 'crystal', image: liangTouMing, imageFit: { w: 384, h: 468, cx: 196, cy: 236, r: 144 } },
+  { id: 'bead-02', name: '暗透明色', category: 'crystal', image: anTouMing, imageFit: { w: 440, h: 440, cx: 224, cy: 221, r: 148 } },
+  { id: 'bead-03', name: '浅蓝色', category: 'crystal', image: qianLan, imageFit: { w: 396, h: 396, cx: 184, cy: 190, r: 146 } },
+  { id: 'bead-04', name: '深粉色', category: 'crystal', image: shenFen, imageFit: { w: 395, h: 395, cx: 203, cy: 190, r: 147 } },
+  { id: 'bead-05', name: '深紫红色', category: 'crystal', image: shenZiHong, imageFit: { w: 376, h: 376, cx: 189, cy: 187, r: 147 } },
+  { id: 'bead-06', name: '深绿色', category: 'crystal', image: shenLv, imageFit: { w: 397, h: 397, cx: 206, cy: 184, r: 146 } },
+  { id: 'bead-07', name: '深蓝色', category: 'crystal', image: shenLan, imageFit: { w: 397, h: 397, cx: 195, cy: 201, r: 145 } },
+  { id: 'bead-08', name: '粉紫色', category: 'crystal', image: fenZi, imageFit: { w: 376, h: 376, cx: 185, cy: 178, r: 147 } },
+  { id: 'bead-09', name: '粉红色', category: 'crystal', image: fenHong, imageFit: { w: 418, h: 418, cx: 205, cy: 201, r: 147 } },
+  { id: 'bead-10', name: '透明白色', category: 'crystal', image: touMingBai, imageFit: { w: 428, h: 428, cx: 200, cy: 211, r: 146 } },
+  { id: 'bead-11', name: '黄褐色', category: 'crystal', image: huangHe, imageFit: { w: 376, h: 376, cx: 178, cy: 180, r: 147 } },
+  { id: 'bead-12', name: '黑色', category: 'crystal', image: heiSe, imageFit: { w: 396, h: 396, cx: 197, cy: 193, r: 145 } },
 ]
 
 // 串绳素材（配件分类）。kind 决定 RopeRing 的纹理：braid 双股编织（中国结绳） / leather 皮革；
