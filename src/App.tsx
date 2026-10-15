@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import Bracelet from './components/Bracelet'
 import BeadPalette from './components/BeadPalette'
-import { beads as beadCatalog, categories } from './data/beads'
+import { beads as beadCatalog, categories, ropes, defaultRope } from './data/beads'
 import { downloadBraceletImage } from './utils/exportImage'
-import type { BeadInstance, BeadType, Design } from './types'
+import type { BeadInstance, BeadType, Design, RopeType } from './types'
 
 let nextId = 1
 function makeInstance(bead: BeadType): BeadInstance {
@@ -23,6 +23,7 @@ function loadDesigns(): Design[] {
 
 export default function App() {
   const [bracelet, setBracelet] = useState<BeadInstance[]>([])
+  const [rope, setRope] = useState<RopeType>(defaultRope)
   const [history, setHistory] = useState<BeadInstance[][]>([])
   const [designs, setDesigns] = useState<Design[]>(loadDesigns)
   const [savedFlash, setSavedFlash] = useState(false)
@@ -80,6 +81,7 @@ export default function App() {
       id: `d-${Date.now()}`,
       name: `设计 ${designs.length + 1}`,
       beadIds: bracelet.map((b) => b.id),
+      ropeId: rope.id,
       createdAt: Date.now(),
     }
     setDesigns((prev) => [design, ...prev])
@@ -93,6 +95,8 @@ export default function App() {
       .filter((b): b is BeadType => Boolean(b))
       .map(makeInstance)
     setBracelet(next)
+    const savedRope = ropes.find((r) => r.id === design.ropeId)
+    if (savedRope) setRope(savedRope)
   }
 
   const screenshot = async () => {
@@ -133,6 +137,7 @@ export default function App() {
       <section className="bracelet-area" ref={braceletAreaRef}>
         <Bracelet
           beads={bracelet}
+          rope={rope}
           onRemove={removeBead}
           onMove={moveBead}
           onDragStart={dragStart}
@@ -143,8 +148,11 @@ export default function App() {
         <BeadPalette
           beads={beadCatalog}
           categories={categories}
+          ropes={ropes}
+          activeRopeId={rope.id}
           designs={designs}
           onAdd={addBead}
+          onSelectRope={setRope}
           onLoadDesign={loadDesign}
         />
       </section>

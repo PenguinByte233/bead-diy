@@ -214,6 +214,11 @@ body {
   background: var(--accent-soft);
 }
 
+.palette-item.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
 .palette-item-svg {
   width: 64px;
   height: 64px;

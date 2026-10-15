@@ -1,11 +1,14 @@
 import { useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
-import type { BeadInstance } from '../types'
+import type { BeadInstance, RopeType } from '../types'
 import { beadPositions, beadRadius } from '../utils/geometry'
 import BeadGlyph from './BeadGlyph'
+import RopeRing from './RopeRing'
 
 interface BraceletProps {
   beads: BeadInstance[]
+  /** 当前串绳 */
+  rope: RopeType
   onRemove: (instanceId: string) => void
   /** 将 instanceId 对应的珠子移动到目标槽位 */
   onMove: (instanceId: string, to: number) => void
@@ -27,13 +30,15 @@ interface DragState {
   dragging: boolean
 }
 
-export default function Bracelet({ beads, onRemove, onMove, onDragStart }: BraceletProps) {
+export default function Bracelet({ beads, rope, onRemove, onMove, onDragStart }: BraceletProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
 
   const count = beads.length
   const r = beadRadius(count, BRACELET_RADIUS)
   const positions = beadPositions(count, CENTER, CENTER, BRACELET_RADIUS)
+  // 绳体略细于珠子，空串时保持一定分量，保证立体纹理清晰可见
+  const ropeThickness = Math.max(r * 0.6, 3)
 
   // 将屏幕坐标映射到手串槽位 index（与 beadPositions 的角度约定一致）
   const indexAt = (clientX: number, clientY: number): number => {
@@ -92,14 +97,9 @@ export default function Bracelet({ beads, onRemove, onMove, onDragStart }: Brace
       aria-label="手串预览"
     >
       {/* 串绳（珠子排列的路径参考） */}
-      <circle
-        cx={CENTER}
-        cy={CENTER}
-        r={BRACELET_RADIUS}
-        fill="none"
-        stroke="#000000"
-        strokeWidth={Math.max(r * 0.35, 2)}
-      />
+      <g transform={`translate(${CENTER} ${CENTER})`}>
+        <RopeRing rope={rope} radius={BRACELET_RADIUS} thickness={ropeThickness} id="bracelet-rope" />
+      </g>
 
       {positions.map((p, i) => {
         const bead = beads[i]

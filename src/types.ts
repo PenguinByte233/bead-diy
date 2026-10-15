@@ -27,11 +27,32 @@ export interface BeadCategory {
   label: string
 }
 
+// 绳子的编织样式，决定 RopeRing 的纹理渲染方式
+export type RopeKind = 'braid' | 'leather'
+
+// 串绳素材（手串的属性，不属于珠子，不占用珠子槽位）
+export interface RopeType {
+  id: string
+  name: string
+  /** 主色（hex），用于 SVG 立体绳体渲染；实拍图绳可省略 */
+  color?: string
+  /** 次色（hex），双股编织中的另一股颜色，缺省时由主色提亮推导 */
+  color2?: string
+  /** 编织样式（实拍图绳可省略） */
+  kind?: RopeKind
+  /** 实拍绳环图（透明底 PNG），优先于 SVG 编织纹理渲染 */
+  image?: string
+  /** 图片绳环的拟合参数：图片尺寸 + 环心 + 中心线半径（图像像素），用于缩放到手串绳环 */
+  imageFit?: { w: number; h: number; cx: number; cy: number; r: number }
+}
+
 // 保存的手串设计（「我的设计」里的一项）
 export interface Design {
   id: string
   name: string
   /** 按顺序排列的珠子素材 id（对应 BeadType.id） */
   beadIds: string[]
+  /** 使用的绳子素材 id（对应 RopeType.id），旧数据缺失时回退默认绳 */
+  ropeId?: string
   createdAt: number
 }
