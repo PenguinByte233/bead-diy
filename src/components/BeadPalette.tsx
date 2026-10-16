@@ -12,7 +12,7 @@ interface BeadPaletteProps {
   /** 当前选中的绳子 id，用于高亮 */
   activeRopeId: string
   designs: Design[]
-  onAdd: (bead: BeadType) => void
+  onAdd: (bead: BeadType, fromEl?: HTMLElement) => void
   onSelectRope: (rope: RopeType) => void
   onLoadDesign: (design: Design) => void
 }
@@ -152,7 +152,7 @@ export default function BeadPalette({
             <button
               key={bead.id}
               className="palette-item"
-              onClick={() => onAdd(bead)}
+              onClick={(e) => onAdd(bead, e.currentTarget)}
               title={`添加 ${bead.name}`}
             >
               <svg className="palette-item-svg" viewBox="0 0 32 32" aria-hidden="true">

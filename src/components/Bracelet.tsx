@@ -14,6 +14,8 @@ interface BraceletProps {
   onMove: (instanceId: string, to: number) => void
   /** 拖动开始时调用一次（用于记录撤销快照） */
   onDragStart: () => void
+  /** 是否渲染中心的数量 / 空状态提示（3D 场景下由外层 DOM 覆盖层负责） */
+  showLabels?: boolean
 }
 
 const SIZE = 320
@@ -32,7 +34,14 @@ interface DragState {
   dragging: boolean
 }
 
-export default function Bracelet({ beads, rope, onRemove, onMove, onDragStart }: BraceletProps) {
+export default function Bracelet({
+  beads,
+  rope,
+  onRemove,
+  onMove,
+  onDragStart,
+  showLabels = true,
+}: BraceletProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
 
@@ -129,13 +138,17 @@ export default function Bracelet({ beads, rope, onRemove, onMove, onDragStart }:
       })}
 
       {/* 中心数量提示 */}
-      <text x={CENTER} y={CENTER - 4} textAnchor="middle" className="bracelet-count">
-        {count === 0 ? '' : `${count} 颗`}
-      </text>
-      {count === 0 && (
-        <text x={CENTER} y={CENTER + 18} textAnchor="middle" className="bracelet-hint">
-          点击下方珠子开始搭配
-        </text>
+      {showLabels && (
+        <>
+          <text x={CENTER} y={CENTER - 4} textAnchor="middle" className="bracelet-count">
+            {count === 0 ? '' : `${count} 颗`}
+          </text>
+          {count === 0 && (
+            <text x={CENTER} y={CENTER + 18} textAnchor="middle" className="bracelet-hint">
+              点击下方珠子开始搭配
+            </text>
+          )}
+        </>
       )}
     </svg>
   )

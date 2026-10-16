@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import Bracelet from './components/Bracelet'
 import BeadPalette from './components/BeadPalette'
-import { beads as beadCatalog, categories, ropes, defaultRope } from './data/beads'
+import { beads as beadCatalog, categories, ropes } from './data/beads'
 import { downloadBraceletImage } from './utils/exportImage'
+import { flyBead } from './utils/flyBead'
+import Bracelet3D from './three/Bracelet3D'
+import { cordTypeForRopeId } from './three/cords'
+import { beadWorldPositions, beadWorldRadius, CAMERA_HALF } from './three/geometry3d'
 import type { BeadInstance, BeadType, Design, RopeType } from './types'
 
 let nextId = 1
@@ -21,13 +25,28 @@ function loadDesigns(): Design[] {
   }
 }
 
+// 当前产品仅启用三种绳子（透明弹力绳 / 酒红色实心绳 / 黑色弹力绳），其余素材保留待用
+const ACTIVE_ROPE_IDS = ['rope-clear-elastic', 'rope-wine-solid', 'rope-black-elastic']
+const activeRopes = ropes.filter((r) => ACTIVE_ROPE_IDS.includes(r.id))
+
 export default function App() {
   const [bracelet, setBracelet] = useState<BeadInstance[]>([])
-  const [rope, setRope] = useState<RopeType>(defaultRope)
+  const [rope, setRope] = useState<RopeType>(activeRopes[0])
   const [history, setHistory] = useState<BeadInstance[][]>([])
   const [designs, setDesigns] = useState<Design[]>(loadDesigns)
   const [savedFlash, setSavedFlash] = useState(false)
   const braceletAreaRef = useRef<HTMLElement>(null)
+  // 3D 画布所在的正方形舞台：飞入动画用它的实际尺寸把世界坐标映射为屏幕坐标
+  const stageRef = useRef<HTMLDivElement>(null)
+
+  // 最新手串快照：飞入动画结束后异步提交时，据此拿到「加入前」状态记录撤销
+  const braceletRef = useRef(bracelet)
+  useEffect(() => {
+    braceletRef.current = bracelet
+  }, [bracelet])
+
+  // 飞行中、尚未落定的珠子数：保证快速连点时各飞入目标槽位不重叠
+  const inFlightRef = useRef(0)
 
   // 设计持久化到本地，刷新后仍在
   useEffect(() => {
@@ -43,7 +62,38 @@ export default function App() {
     setBracelet(next)
   }
 
-  const addBead = (bead: BeadType) => commit([...bracelet, makeInstance(bead)])
+  const addBead = (bead: BeadType, fromEl?: HTMLElement) => {
+    const stage = stageRef.current
+    // 目标槽位 = 已落定珠子数 + 飞行中珠子数（同步递增，避免连点时飞向同一槽位）
+    const slot = braceletRef.current.length + inFlightRef.current
+    const nextCount = slot + 1
+
+    if (!stage) {
+      setHistory((h) => [...h, braceletRef.current])
+      setBracelet((prev) => [...prev, makeInstance(bead)])
+      return
+    }
+
+    const stageRect = stage.getBoundingClientRect()
+    const scale = stageRect.width / (2 * CAMERA_HALF)
+    const target = beadWorldPositions(nextCount)[slot]
+    const to = {
+      x: stageRect.left + stageRect.width / 2 + target.x * scale,
+      y: stageRect.top + stageRect.height / 2 + target.y * scale,
+    }
+    const srcRect = fromEl?.getBoundingClientRect()
+    const from = srcRect
+      ? { x: srcRect.left + srcRect.width / 2, y: srcRect.top + srcRect.height / 2 }
+      : { x: stageRect.left + stageRect.width / 2, y: stageRect.bottom }
+    const screenDiameter = (beadWorldRadius(nextCount) / CAMERA_HALF) * stageRect.width
+
+    inFlightRef.current += 1
+    flyBead(bead, from, to, screenDiameter, () => {
+      inFlightRef.current -= 1
+      setHistory((h) => [...h, braceletRef.current])
+      setBracelet((prev) => [...prev, makeInstance(bead)])
+    })
+  }
 
   const removeBead = (instanceId: string) =>
     commit(bracelet.filter((b) => b.instanceId !== instanceId))
@@ -95,7 +145,7 @@ export default function App() {
       .filter((b): b is BeadType => Boolean(b))
       .map(makeInstance)
     setBracelet(next)
-    const savedRope = ropes.find((r) => r.id === design.ropeId)
+    const savedRope = activeRopes.find((r) => r.id === design.ropeId)
     if (savedRope) setRope(savedRope)
   }
 
@@ -135,20 +185,37 @@ export default function App() {
       </header>
 
       <section className="bracelet-area" ref={braceletAreaRef}>
-        <Bracelet
-          beads={bracelet}
-          rope={rope}
-          onRemove={removeBead}
-          onMove={moveBead}
-          onDragStart={dragStart}
-        />
+        <div className="bracelet-stage" ref={stageRef}>
+          <Bracelet3D
+            beads={bracelet}
+            cordType={cordTypeForRopeId(rope.id)}
+            onRemove={removeBead}
+            fallback={
+              <Bracelet
+                beads={bracelet}
+                rope={rope}
+                onRemove={removeBead}
+                onMove={moveBead}
+                onDragStart={dragStart}
+                showLabels={false}
+              />
+            }
+          />
+          <div className="bracelet-stage-overlay">
+            {bracelet.length > 0 ? (
+              <span className="bracelet-count-text">{bracelet.length} 颗</span>
+            ) : (
+              <span className="bracelet-hint-text">点击下方珠子开始搭配</span>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className="palette-area">
         <BeadPalette
           beads={beadCatalog}
           categories={categories}
-          ropes={ropes}
+          ropes={activeRopes}
           activeRopeId={rope.id}
           designs={designs}
           onAdd={addBead}
