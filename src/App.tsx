@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Bracelet from './components/Bracelet'
 import BeadPalette from './components/BeadPalette'
 import { beads as beadCatalog, categories, ropes } from './data/beads'
-import { downloadBraceletImage } from './utils/exportImage'
+import { downloadBraceletImage, downloadCanvasImage } from './utils/exportImage'
 import { flyBead } from './utils/flyBead'
 import Bracelet3D from './three/Bracelet3D'
 import { cordTypeForRopeId } from './three/cords'
@@ -77,9 +77,11 @@ export default function App() {
     const stageRect = stage.getBoundingClientRect()
     const scale = stageRect.width / (2 * CAMERA_HALF)
     const target = beadWorldPositions(nextCount)[slot]
+    // 3D 世界坐标 y 轴向上，DOM 屏幕坐标 y 轴向下，映射时需对 y 取反，
+    // 否则飞入终点与珠子实际落点上下镜像错位，珠子会在落地瞬间「闪现」到别处。
     const to = {
       x: stageRect.left + stageRect.width / 2 + target.x * scale,
-      y: stageRect.top + stageRect.height / 2 + target.y * scale,
+      y: stageRect.top + stageRect.height / 2 - target.y * scale,
     }
     const srcRect = fromEl?.getBoundingClientRect()
     const from = srcRect
@@ -151,10 +153,14 @@ export default function App() {
 
   const screenshot = async () => {
     if (bracelet.length === 0) return
-    const svg = braceletAreaRef.current?.querySelector<SVGSVGElement>('svg')
-    if (!svg) return
+    const area = braceletAreaRef.current
+    if (!area) return
+    // 3D 模式下取 WebGL 画布；降级回 SVG 版本时取 svg 元素
+    const canvas = area.querySelector<HTMLCanvasElement>('canvas')
+    const svg = area.querySelector<SVGSVGElement>('svg')
     try {
-      await downloadBraceletImage(svg)
+      if (canvas) await downloadCanvasImage(canvas)
+      else if (svg) await downloadBraceletImage(svg)
     } catch (err) {
       console.error(err)
       alert('截图生成失败')

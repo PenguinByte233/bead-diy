@@ -16,18 +16,11 @@ export const CORD_OPTIONS: CordOption[] = [
 ]
 
 /**
- * 各绳子的截面半径 = 珠子半径 × 比例。
- * 跟随珠子尺寸一起缩放，避免珠子增多变小后出现「绳比珠粗」。
+ * 各绳子的截面半径 = 满编珠子半径 × 比例。
+ * 三种绳子统一粗细，与透明弹力绳一致，避免切换绳子材质时粗细突变。
  */
-export function cordTubeRatio(type: CordType): number {
-  switch (type) {
-    case 'transparent-elastic':
-      return 0.18
-    case 'black-elastic':
-      return 0.24
-    case 'burgundy-round':
-      return 0.42
-  }
+export function cordTubeRatio(_type: CordType): number {
+  return 0.18
 }
 
 // 业务 RopeType id → 渲染 CordType 的映射（3D 渲染层接入正式页面时使用）

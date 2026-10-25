@@ -1,5 +1,14 @@
 // 将手串 SVG 导出为 PNG 并下载。
 
+async function downloadPng(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 function blobToDataURL(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -63,10 +72,23 @@ export async function downloadBraceletImage(svg: SVGSVGElement, filename = '手�
 
   const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
   if (!blob) throw new Error('PNG 导出失败')
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
+  await downloadPng(blob, filename)
+}
+
+// 将 3D WebGL 画布导出为 PNG 并下载。
+// WebGL 画布默认透明，导出前铺上与页面一致的颜色，避免得到透明背景。
+export async function downloadCanvasImage(canvas: HTMLCanvasElement, filename = '手串设计.png') {
+  const out = document.createElement('canvas')
+  out.width = canvas.width
+  out.height = canvas.height
+  const ctx = out.getContext('2d')
+  if (!ctx) throw new Error('无法创建画布')
+
+  ctx.fillStyle = '#f7f3ee'
+  ctx.fillRect(0, 0, out.width, out.height)
+  ctx.drawImage(canvas, 0, 0)
+
+  const blob = await new Promise<Blob | null>((resolve) => out.toBlob(resolve, 'image/png'))
+  if (!blob) throw new Error('PNG 导出失败')
+  await downloadPng(blob, filename)
 }

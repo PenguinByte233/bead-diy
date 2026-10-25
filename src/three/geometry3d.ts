@@ -3,9 +3,9 @@ import { beadPositions, type Point } from '../utils/geometry'
 // 3D 场景统一使用世界单位：手串半径 R = 1，正交相机按此取景。
 export const R = 1
 
-// 珠子间距系数：让相邻珠子之间留出可见缝隙，绳子才能从珠间自然显露。
-// 相切时为 1，越小缝隙越大、绳子越明显。阶段一先取 0.85 验证遮挡效果。
-export const BEAD_SPACING = 0.85
+// 珠子间距系数：1 表示相邻珠子恰好相切（10 颗满编时首尾相接、无间隙），
+// 小于 1 会在珠间留缝露出绳子。当前要求满编无间隙，故取 1。
+export const BEAD_SPACING = 1
 
 // 正交相机取景半宽（覆盖 10 颗满编珠子的最外缘 + 阴影余量）
 export const CAMERA_HALF = 1.6

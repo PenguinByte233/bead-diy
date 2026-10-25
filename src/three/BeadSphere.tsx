@@ -55,10 +55,11 @@ function PhotoBead({
   const geometry = useMemo(() => createPhotoSphereGeometry(r, imageFit), [r, imageFit])
   useEffect(() => () => geometry.dispose(), [geometry])
 
-  // 阶段二确定：photo texture only——不叠加光照，保持实拍照片原始明暗与细节
+  // 阶段二确定：photo texture only——不叠加光照，也不做色调映射（toneMapped=false），
+  // 让珠子保持实拍照片原始明暗与色调，和下方素材区 SVG 预览一致
   return (
     <mesh geometry={geometry} onClick={onClick}>
-      <meshBasicMaterial map={texture} />
+      <meshBasicMaterial map={texture} toneMapped={false} />
     </mesh>
   )
 }

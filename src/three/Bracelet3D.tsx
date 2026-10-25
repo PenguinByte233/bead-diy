@@ -6,7 +6,6 @@ import { useWebGLSupport } from './useWebGLSupport'
 import { beadWorldPositions, beadWorldRadius, CAMERA_HALF } from './geometry3d'
 import BeadSphere from './BeadSphere'
 import RopeTube from './RopeTube'
-import ContactShadow from './ContactShadow'
 
 interface Bracelet3DProps {
   beads: BeadInstance[]
@@ -69,15 +68,16 @@ export default function Bracelet3D({ beads, cordType, fallback = null, onRemove 
           bottom: -CAMERA_HALF,
         }}
         dpr={[1, 2]}
+        // 保留绘制缓冲，否则点击截图时 WebGL 缓冲区已被清空，导出的是空白图
+        gl={{ preserveDrawingBuffer: true }}
         style={{ width: '100%', height: '100%' }}
       >
         <Suspense fallback={null}>
           <Lights />
           {/* 绳子始终渲染：空串时也保留一圈绳子作为放置参考 */}
-          <RopeTube cordType={cordType} beadRadius={rb} />
+          <RopeTube cordType={cordType} />
           {count > 0 && (
             <>
-              <ContactShadow beadRadius={rb} />
               {positions.map((p, i) => (
                 <BeadSphere
                   key={beads[i].instanceId}
