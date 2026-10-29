@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import type { BeadInstance } from '../types'
 import type { CordType } from './cords'
 import { useWebGLSupport } from './useWebGLSupport'
-import { beadWorldPositions, beadWorldRadius, CAMERA_HALF } from './geometry3d'
+import { beadWorldLayout, CAMERA_HALF } from './geometry3d'
 import BeadSphere from './BeadSphere'
 import RopeTube from './RopeTube'
 
@@ -51,8 +51,7 @@ export default function Bracelet3D({ beads, cordType, fallback = null, onRemove 
   if (!supported) return <>{fallback}</>
 
   const count = beads.length
-  const rb = beadWorldRadius(count)
-  const positions = beadWorldPositions(count)
+  const layout = beadWorldLayout(beads.map((b) => b.diameter))
 
   return (
     <CanvasErrorBoundary fallback={fallback}>
@@ -78,11 +77,11 @@ export default function Bracelet3D({ beads, cordType, fallback = null, onRemove 
           <RopeTube cordType={cordType} />
           {count > 0 && (
             <>
-              {positions.map((p, i) => (
+              {layout.positions.map((p, i) => (
                 <BeadSphere
                   key={beads[i].instanceId}
                   bead={beads[i]}
-                  r={rb}
+                  r={layout.radii[i]}
                   position={[p.x, p.y, 0]}
                   onClick={onRemove ? () => onRemove(beads[i].instanceId) : undefined}
                 />

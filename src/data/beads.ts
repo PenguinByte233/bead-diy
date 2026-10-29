@@ -1,4 +1,5 @@
 import type { BeadCategory, BeadType, RopeType } from '../types'
+import { BEAD_DIAMETERS, DEFAULT_BEAD_DIAMETER } from '../utils/geometry'
 
 // 实拍珠子素材（透明底 PNG）。实体珠子归入「水晶宝石」，配件与我的设计暂为空。
 import liangTouMing from '../beads/亮透明珠子_transparent.png'
@@ -26,7 +27,10 @@ export const categories: BeadCategory[] = [
   { id: 'design', label: '我的设计' },
 ]
 
-export const beads: BeadType[] = [
+// 12 种实拍珠子的基础定义（不含直径）。下面按 6 / 8 / 10mm 三种直径展开为 36 个素材项：
+// 10mm 沿用原 id（旧保存数据不受影响），6 / 8mm 在 id 末尾加「-直径」后缀。
+// 名称保持纯颜色名，直径由水晶栏顶部的直径选择器区分。
+const baseBeads: BeadType[] = [
   { id: 'bead-01', name: '亮透明', category: 'crystal', image: liangTouMing, imageFit: { w: 384, h: 468, cx: 196, cy: 236, r: 144 } },
   { id: 'bead-02', name: '暗透明色', category: 'crystal', image: anTouMing, imageFit: { w: 440, h: 440, cx: 224, cy: 221, r: 148 } },
   { id: 'bead-03', name: '浅蓝色', category: 'crystal', image: qianLan, imageFit: { w: 396, h: 396, cx: 184, cy: 190, r: 146 } },
@@ -40,6 +44,14 @@ export const beads: BeadType[] = [
   { id: 'bead-11', name: '黄褐色', category: 'crystal', image: huangHe, imageFit: { w: 376, h: 376, cx: 178, cy: 180, r: 147 } },
   { id: 'bead-12', name: '黑色', category: 'crystal', image: heiSe, imageFit: { w: 396, h: 396, cx: 197, cy: 193, r: 145 } },
 ]
+
+export const beads: BeadType[] = baseBeads.flatMap((bead) =>
+  BEAD_DIAMETERS.map((diameter) => ({
+    ...bead,
+    id: diameter === DEFAULT_BEAD_DIAMETER ? bead.id : `${bead.id}-${diameter}`,
+    diameter,
+  })),
+)
 
 // 串绳素材（配件分类）。kind 决定 RopeRing 的纹理：braid 双股编织（中国结绳） / leather 皮革；
 // 带 image 的为实拍绳环图，优先按图渲染。

@@ -197,6 +197,7 @@ body {
 }
 
 .palette-tab {
+  flex: 0 0 auto;
   padding: 6px 16px;
   font-size: 14px;
   color: var(--ink-muted);
@@ -242,9 +243,15 @@ body {
   touch-action: manipulation;
 }
 
-.palette-item:active {
+.palette-item:active:not(:disabled) {
   transform: scale(0.94);
   background: var(--accent-soft);
+}
+
+.palette-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg);
 }
 
 .palette-item.is-selected {

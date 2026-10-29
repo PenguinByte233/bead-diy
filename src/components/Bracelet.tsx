@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { BeadInstance, RopeType } from '../types'
-import { beadPositions, beadRadius } from '../utils/geometry'
+import { layoutBeads, DEFAULT_BEAD_DIAMETER, fullCountForDiameter } from '../utils/geometry'
 import BeadGlyph from './BeadGlyph'
 import RopeRing from './RopeRing'
 
@@ -46,19 +46,29 @@ export default function Bracelet({
   const [drag, setDrag] = useState<DragState | null>(null)
 
   const count = beads.length
-  const r = beadRadius(count, BRACELET_RADIUS)
-  const positions = beadPositions(count, CENTER, CENTER, BRACELET_RADIUS)
-  // 绳体略细于珠子，空串时保持一定分量，保证立体纹理清晰可见
-  const ropeThickness = Math.max(r * 0.6, 3)
+  const layout = layoutBeads(beads.map((b) => b.diameter), CENTER, CENTER, BRACELET_RADIUS)
+  // 绳体粗细以默认直径（10mm）满编珠子为固定参考，不随当前颗数/直径变化
+  const referenceBeadRadius =
+    BRACELET_RADIUS * Math.sin(Math.PI / fullCountForDiameter(DEFAULT_BEAD_DIAMETER))
+  const ropeThickness = Math.max(referenceBeadRadius * 0.6, 3)
 
-  // 将屏幕坐标映射到手串槽位 index（与 beadPositions 的角度约定一致）
+  // 将屏幕坐标映射到最近珠子的 index（混用直径时角度非均匀，按距离找最近珠心）
   const indexAt = (clientX: number, clientY: number): number => {
     const rect = svgRef.current!.getBoundingClientRect()
-    const cx = rect.left + rect.width / 2
-    const cy = rect.top + rect.height / 2
-    let angle = Math.atan2(clientY - cy, clientX - cx) + Math.PI / 2
-    if (angle < 0) angle += 2 * Math.PI
-    return Math.round(angle / ((2 * Math.PI) / count)) % count
+    const scale = rect.width / SIZE
+    const px = (clientX - rect.left - rect.width / 2) / scale + CENTER
+    const py = (clientY - rect.top - rect.height / 2) / scale + CENTER
+    let best = 0
+    let bestDist = Infinity
+    for (let i = 0; i < layout.positions.length; i++) {
+      const p = layout.positions[i]
+      const d = (px - p.x) * (px - p.x) + (py - p.y) * (py - p.y)
+      if (d < bestDist) {
+        bestDist = d
+        best = i
+      }
+    }
+    return best
   }
 
   const handlePointerDown = (e: ReactPointerEvent<SVGGElement>, instanceId: string) => {
@@ -112,8 +122,9 @@ export default function Bracelet({
         <RopeRing rope={rope} radius={BRACELET_RADIUS} thickness={ropeThickness} id="bracelet-rope" />
       </g>
 
-      {positions.map((p, i) => {
+      {layout.positions.map((p, i) => {
         const bead = beads[i]
+        const r = layout.radii[i]
         const isDragging = drag?.dragging && drag.instanceId === bead.instanceId
         return (
           <g

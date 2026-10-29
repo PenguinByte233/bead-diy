@@ -6,12 +6,19 @@ import { downloadBraceletImage, downloadCanvasImage } from './utils/exportImage'
 import { flyBead } from './utils/flyBead'
 import Bracelet3D from './three/Bracelet3D'
 import { cordTypeForRopeId } from './three/cords'
-import { beadWorldPositions, beadWorldRadius, CAMERA_HALF } from './three/geometry3d'
+import { beadWorldLayout, CAMERA_HALF } from './three/geometry3d'
+import { BEAD_DIAMETERS, braceletFullness, fullCountForDiameter } from './utils/geometry'
 import type { BeadInstance, BeadType, Design, RopeType } from './types'
 
 let nextId = 1
 function makeInstance(bead: BeadType): BeadInstance {
   return { ...bead, instanceId: `inst-${nextId++}` }
+}
+
+// 满编判断的浮点容差：占用率之和在此误差内视为满编
+const FULL_EPS = 1e-9
+function canAddToBracelet(diameters: (number | undefined)[], next?: number): boolean {
+  return braceletFullness(diameters) + 1 / fullCountForDiameter(next) <= 1 + FULL_EPS
 }
 
 const DESIGNS_KEY = 'bead-diy-designs'
@@ -45,8 +52,13 @@ export default function App() {
     braceletRef.current = bracelet
   }, [bracelet])
 
-  // 飞行中、尚未落定的珠子数：保证快速连点时各飞入目标槽位不重叠
-  const inFlightRef = useRef(0)
+  // 飞行中、尚未落定的珠子直径：快速连点时据此计算飞入目标槽位并参与满编判断
+  const inFlightDiametersRef = useRef<(number | undefined)[]>([])
+
+  // 当前串的占用率与满编状态：用于素材区禁用与「已满」提示
+  const diameters = bracelet.map((b) => b.diameter)
+  const isFull = bracelet.length > 0 && !BEAD_DIAMETERS.some((d) => canAddToBracelet(diameters, d))
+  const canAddBead = (bead: BeadType) => canAddToBracelet(diameters, bead.diameter)
 
   // 设计持久化到本地，刷新后仍在
   useEffect(() => {
@@ -63,20 +75,30 @@ export default function App() {
   }
 
   const addBead = (bead: BeadType, fromEl?: HTMLElement) => {
-    const stage = stageRef.current
-    // 目标槽位 = 已落定珠子数 + 飞行中珠子数（同步递增，避免连点时飞向同一槽位）
-    const slot = braceletRef.current.length + inFlightRef.current
-    const nextCount = slot + 1
+    const committedDiameters = braceletRef.current.map((b) => b.diameter)
+    // 满编判断：已落定 + 飞行中 + 新珠，占用率不能超过 1（满了不允许再加）
+    if (!canAddToBracelet([...committedDiameters, ...inFlightDiametersRef.current], bead.diameter)) {
+      return
+    }
 
+    const stage = stageRef.current
     if (!stage) {
       setHistory((h) => [...h, braceletRef.current])
       setBracelet((prev) => [...prev, makeInstance(bead)])
       return
     }
 
+    // 新珠追加到末尾，用「已落定 + 飞行中 + 新珠」的完整布局取最后落点与半径
+    const layout = beadWorldLayout([
+      ...committedDiameters,
+      ...inFlightDiametersRef.current,
+      bead.diameter,
+    ])
+    const last = layout.positions.length - 1
+    const target = layout.positions[last]
+
     const stageRect = stage.getBoundingClientRect()
     const scale = stageRect.width / (2 * CAMERA_HALF)
-    const target = beadWorldPositions(nextCount)[slot]
     // 3D 世界坐标 y 轴向上，DOM 屏幕坐标 y 轴向下，映射时需对 y 取反，
     // 否则飞入终点与珠子实际落点上下镜像错位，珠子会在落地瞬间「闪现」到别处。
     const to = {
@@ -87,11 +109,12 @@ export default function App() {
     const from = srcRect
       ? { x: srcRect.left + srcRect.width / 2, y: srcRect.top + srcRect.height / 2 }
       : { x: stageRect.left + stageRect.width / 2, y: stageRect.bottom }
-    const screenDiameter = (beadWorldRadius(nextCount) / CAMERA_HALF) * stageRect.width
+    const screenDiameter = (layout.radii[last] / CAMERA_HALF) * stageRect.width
 
-    inFlightRef.current += 1
+    inFlightDiametersRef.current.push(bead.diameter)
     flyBead(bead, from, to, screenDiameter, () => {
-      inFlightRef.current -= 1
+      // flyBead 时长固定、按启动顺序完成，FIFO 弹出第一个飞行中的直径即可
+      inFlightDiametersRef.current.shift()
       setHistory((h) => [...h, braceletRef.current])
       setBracelet((prev) => [...prev, makeInstance(bead)])
     })
@@ -209,7 +232,9 @@ export default function App() {
           />
           <div className="bracelet-stage-overlay">
             {bracelet.length > 0 ? (
-              <span className="bracelet-count-text">{bracelet.length} 颗</span>
+              <span className="bracelet-count-text">
+                {isFull ? `${bracelet.length} 颗 · 已满` : `${bracelet.length} 颗`}
+              </span>
             ) : (
               <span className="bracelet-hint-text">点击下方珠子开始搭配</span>
             )}
@@ -227,6 +252,7 @@ export default function App() {
           onAdd={addBead}
           onSelectRope={setRope}
           onLoadDesign={loadDesign}
+          canAdd={canAddBead}
         />
       </section>
     </div>

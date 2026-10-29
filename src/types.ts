@@ -24,6 +24,8 @@ export interface BeadType {
   imageFit?: ImageFit
   /** 参考单价（第一版暂不展示，预留字段） */
   price?: number
+  /** 珠子直径（mm），决定满编无间隙颗数：6→28、8→22、10→18 */
+  diameter?: number
   /** 光泽类型：high 高光 / matte 哑光 / metallic 金属，仅用于 SVG 兜底渲染 */
   gloss?: 'high' | 'matte' | 'metallic'
 }
