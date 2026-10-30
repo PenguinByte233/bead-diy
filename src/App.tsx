@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import Bracelet from './components/Bracelet'
-import BeadPalette from './components/BeadPalette'
+import BeadPalette, { type PaletteCategory } from './components/BeadPalette'
+import SelectedBeads from './components/SelectedBeads'
 import { beads as beadCatalog, categories, ropes } from './data/beads'
 import { downloadBraceletImage, downloadCanvasImage } from './utils/exportImage'
 import { flyBead } from './utils/flyBead'
 import Bracelet3D from './three/Bracelet3D'
 import { cordTypeForRopeId } from './three/cords'
 import { beadWorldLayout, CAMERA_HALF } from './three/geometry3d'
-import { BEAD_DIAMETERS, braceletFullness, fullCountForDiameter } from './utils/geometry'
+import {
+  DEFAULT_BEAD_DIAMETER,
+  braceletFullness,
+  fullCountForDiameter,
+  wristCircumference,
+} from './utils/geometry'
 import type { BeadInstance, BeadType, Design, RopeType } from './types'
 
 let nextId = 1
@@ -42,6 +48,9 @@ export default function App() {
   const [history, setHistory] = useState<BeadInstance[][]>([])
   const [designs, setDesigns] = useState<Design[]>(loadDesigns)
   const [savedFlash, setSavedFlash] = useState(false)
+  // 素材区当前规格与分类（提升到 App，供预览信息行与网格共用）
+  const [activeDiameter, setActiveDiameter] = useState<number>(DEFAULT_BEAD_DIAMETER)
+  const [activeCategory, setActiveCategory] = useState<PaletteCategory>('crystal')
   const braceletAreaRef = useRef<HTMLElement>(null)
   // 3D 画布所在的正方形舞台：飞入动画用它的实际尺寸把世界坐标映射为屏幕坐标
   const stageRef = useRef<HTMLDivElement>(null)
@@ -55,9 +64,8 @@ export default function App() {
   // 飞行中、尚未落定的珠子直径：快速连点时据此计算飞入目标槽位并参与满编判断
   const inFlightDiametersRef = useRef<(number | undefined)[]>([])
 
-  // 当前串的占用率与满编状态：用于素材区禁用与「已满」提示
+  // 当前串的占用率：用于素材区满编禁用判断
   const diameters = bracelet.map((b) => b.diameter)
-  const isFull = bracelet.length > 0 && !BEAD_DIAMETERS.some((d) => canAddToBracelet(diameters, d))
   const canAddBead = (bead: BeadType) => canAddToBracelet(diameters, bead.diameter)
 
   // 设计持久化到本地，刷新后仍在
@@ -123,24 +131,12 @@ export default function App() {
   const removeBead = (instanceId: string) =>
     commit(bracelet.filter((b) => b.instanceId !== instanceId))
 
-  const clearAll = () => {
-    if (bracelet.length === 0) return
-    commit([])
-  }
-
-  const moveBead = (instanceId: string, to: number) => {
-    setBracelet((prev) => {
-      const from = prev.findIndex((b) => b.instanceId === instanceId)
-      if (from < 0 || from === to) return prev
-      const next = [...prev]
-      const [item] = next.splice(from, 1)
-      next.splice(to, 0, item)
-      return next
-    })
-  }
-
-  const dragStart = () => {
-    setHistory((h) => [...h, bracelet])
+  // 重置：清空珠子并恢复到默认规格（10mm）+ 默认绳
+  const resetAll = () => {
+    if (bracelet.length > 0) commit([])
+    setActiveDiameter(DEFAULT_BEAD_DIAMETER)
+    setActiveCategory('crystal')
+    setRope(activeRopes[0])
   }
 
   const undo = () => {
@@ -190,29 +186,24 @@ export default function App() {
     }
   }
 
+  const disabledNav = bracelet.length === 0
+
   return (
     <div className="app">
-      <header className="app-header">
-        <div className="app-header-title">
-          <h1>珠串 DIY</h1>
-          <p className="app-subtitle">点击下方珠子，搭配你的专属手串</p>
-        </div>
-        <div className="toolbar">
-          <button className="tool-btn" onClick={undo} disabled={history.length === 0}>
-            撤销
+      {/* ① 顶部导航栏 */}
+      <nav className="app-nav">
+        <h1 className="app-nav-title">手串DIY</h1>
+        <div className="nav-actions">
+          <button className="nav-text" type="button" onClick={undo} disabled={history.length === 0}>
+            撤回
           </button>
-          <button className="tool-btn" onClick={clearAll} disabled={bracelet.length === 0}>
-            清空
-          </button>
-          <button className="tool-btn" onClick={saveDesign} disabled={bracelet.length === 0}>
-            {savedFlash ? '已保存' : '保存'}
-          </button>
-          <button className="tool-btn" onClick={screenshot} disabled={bracelet.length === 0}>
-            截图
+          <button className="nav-text" type="button" onClick={resetAll}>
+            重置
           </button>
         </div>
-      </header>
+      </nav>
 
+      {/* ② 手串预览主区 */}
       <section className="bracelet-area" ref={braceletAreaRef}>
         <div className="bracelet-stage" ref={stageRef}>
           <Bracelet3D
@@ -224,37 +215,62 @@ export default function App() {
                 beads={bracelet}
                 rope={rope}
                 onRemove={removeBead}
-                onMove={moveBead}
-                onDragStart={dragStart}
+                onMove={() => {}}
+                onDragStart={() => {}}
                 showLabels={false}
               />
             }
           />
-          <div className="bracelet-stage-overlay">
-            {bracelet.length > 0 ? (
-              <span className="bracelet-count-text">
-                {isFull ? `${bracelet.length} 颗 · 已满` : `${bracelet.length} 颗`}
-              </span>
-            ) : (
+          {bracelet.length === 0 && (
+            <div className="bracelet-stage-overlay">
               <span className="bracelet-hint-text">点击下方珠子开始搭配</span>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
+        <p className="bracelet-info">
+          {activeDiameter}mm | {bracelet.length} 颗
+          {bracelet.length > 0 && ` | 手围约 ${(wristCircumference(diameters) / 10).toFixed(1)}cm`}
+        </p>
+      </section>
+
+      {/* ③ 已选珠子横向栏：左说明 / 中间滚动珠子 / 右数量 */}
+      <section className="selected-area">
+        <span className="selected-label">已选珠子</span>
+        <SelectedBeads beads={bracelet} onRemove={removeBead} />
+        <div className="selected-count">
+          <span className="selected-count-num">共 {bracelet.length} 颗</span>
+          <span className="selected-count-hint">点击单颗可移除</span>
         </div>
       </section>
 
-      <section className="palette-area">
-        <BeadPalette
-          beads={beadCatalog}
-          categories={categories}
-          ropes={activeRopes}
-          activeRopeId={rope.id}
-          designs={designs}
-          onAdd={addBead}
-          onSelectRope={setRope}
-          onLoadDesign={loadDesign}
-          canAdd={canAddBead}
-        />
-      </section>
+      {/* ④⑤ 规格 Tab + 珠子素材网格（同一组件，视觉上分两段） */}
+      <BeadPalette
+        beads={beadCatalog}
+        categories={categories}
+        ropes={activeRopes}
+        activeRopeId={rope.id}
+        designs={designs}
+        activeDiameter={activeDiameter}
+        activeCategory={activeCategory}
+        onSelectDiameter={setActiveDiameter}
+        onSelectCategory={setActiveCategory}
+        onAdd={addBead}
+        onSelectRope={setRope}
+        onLoadDesign={loadDesign}
+        canAdd={canAddBead}
+      />
+
+      {/* ⑥ 底部操作栏 */}
+      <footer className="action-bar">
+        <button className="action-btn action-btn-primary" onClick={saveDesign} disabled={disabledNav}>
+          保存搭配
+        </button>
+        <button className="action-btn action-btn-secondary" onClick={screenshot} disabled={disabledNav}>
+          截取图片
+        </button>
+      </footer>
+
+      {savedFlash && <div className="toast">已保存</div>}
     </div>
   )
 }

@@ -58,7 +58,7 @@ export async function downloadBraceletImage(svg: SVGSVGElement, filename = '手�
   if (!ctx) throw new Error('无法创建画布')
 
   // 背景与页面保持一致，避免导出透明背景
-  ctx.fillStyle = '#f7f3ee'
+  ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
   const image = new Image()
@@ -84,7 +84,7 @@ export async function downloadCanvasImage(canvas: HTMLCanvasElement, filename = 
   const ctx = out.getContext('2d')
   if (!ctx) throw new Error('无法创建画布')
 
-  ctx.fillStyle = '#f7f3ee'
+  ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, out.width, out.height)
   ctx.drawImage(canvas, 0, 0)
 

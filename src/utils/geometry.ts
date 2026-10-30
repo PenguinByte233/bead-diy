@@ -28,6 +28,11 @@ export function braceletFullness(diameters: (number | undefined)[]): number {
   return diameters.reduce((sum: number, d) => sum + 1 / fullCountForDiameter(d), 0)
 }
 
+/** 估算手围 = 各珠子直径之和（mm）。珠子串成圈后，内圈周长近似等于总珠长。 */
+export function wristCircumference(diameters: (number | undefined)[]): number {
+  return diameters.reduce((sum: number, d) => sum + (d ?? DEFAULT_BEAD_DIAMETER), 0)
+}
+
 /**
  * 沿圆布置一串珠子，返回每颗珠子的圆心坐标、半径与整串占用率。
  *

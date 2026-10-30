@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { useLoader } from '@react-three/fiber'
+import { useFrame, useLoader } from '@react-three/fiber'
 import type { BeadInstance, ImageFit } from '../types'
 
 interface BeadSphereProps {
@@ -81,10 +81,42 @@ function ProceduralBead({
   )
 }
 
-/** 单颗珠子：有实拍图走照片贴图球体（无光照），否则回退程序化纯色球。 */
+// 珠子沿绳圈追赶目标位置的速度：越大越快。指数阻尼下约 0.25s 内滑到视觉贴合。
+const GLIDE_SPEED = 12
+
+/**
+ * 单颗珠子：有实拍图走照片贴图球体（无光照），否则回退程序化纯色球。
+ * 位置不由 prop 直接写入，而是沿绳圈轨迹（半径恒定的圆）用指数阻尼平滑滑向目标：
+ * 添加珠子挤压其他珠子时，它们会贴着绳子滑过去，而不是瞬移/闪现。
+ */
 export default function BeadSphere({ bead, r, position, onClick }: BeadSphereProps) {
+  const groupRef = useRef<THREE.Group>(null)
+  // 当前已渲染的角度（沿圆周），初始化为目标角度，避免首帧从原点闪现
+  const angleRef = useRef<number>(Math.atan2(position[1], position[0]))
+  // 最新目标位置：每次渲染更新，useFrame 里据此计算目标角度与半径
+  const targetRef = useRef(position)
+  targetRef.current = position
+
+  useFrame((_, delta) => {
+    const group = groupRef.current
+    if (!group) return
+    const [tx, ty, tz = 0] = targetRef.current
+    const targetAngle = Math.atan2(ty, tx)
+    const radius = Math.hypot(tx, ty)
+
+    // 沿绳圈取最短角距离，避免跨越 ±π 时反向绕一大圈
+    let diff = targetAngle - angleRef.current
+    while (diff > Math.PI) diff -= Math.PI * 2
+    while (diff < -Math.PI) diff += Math.PI * 2
+
+    // 帧率无关的指数阻尼：连续快速添加多颗也能自然衔接，不会叠加出过冲
+    angleRef.current += diff * (1 - Math.exp(-GLIDE_SPEED * delta))
+
+    group.position.set(radius * Math.cos(angleRef.current), radius * Math.sin(angleRef.current), tz)
+  })
+
   return (
-    <group position={position}>
+    <group ref={groupRef}>
       {bead.image ? (
         <PhotoBead image={bead.image} imageFit={bead.imageFit} r={r} onClick={onClick} />
       ) : (
